@@ -1,0 +1,84 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+# 
+# hint:
+# cnspec shell local
+
+
+policies:
+  - uid: joern-linux-security
+    name: Joern Linux Security
+    version: 1.0.0
+    license: BUSL-1.1
+    authors:
+      - name: Joern
+        email: jstenkamp@mailbox.org
+    docs:
+      desc: |-
+        ## Overview
+
+        The Joern Linux Security policy provides guidance for establishing a secure baseline configuration for Linux systems running on x86 and x64 platforms.
+    groups:
+      - title: Core
+        filters: |
+          asset.family.contains('linux')
+        checks:
+          - uid: joern-linux-security-ssh-is-enabled
+          - uid: joern-linux-security-dhcp-server-is-not-enabled
+          - uid: joern-linux-security-permissions-on-etcgroup-are-configured
+
+
+  - uid: joern-linux-security-ssh-is-enabled
+    title: Ensure ssh is enabled
+    impact: 100
+    filters: |
+      asset.kind != "container-image"
+    mql: |
+      service("ssh").enabled == true
+      service("ssh").running == true
+    docs:
+      desc: SSH needs to be enabled.
+      remediation: |-
+        Run this command to install `ssh` :
+
+        ```
+        apt-get install ssh
+        ```
+  - uid: joern-linux-security-dhcp-server-is-not-enabled
+    title: Ensure DHCP server is stopped and not enabled
+    impact: 100
+    filters: |
+      asset.kind != "container-image"
+    mql: |
+      service("dhcpd").enabled == false
+      service("dhcpd").running == false
+    docs:
+      desc: The Dynamic Host Configuration Protocol (DHCP) is a service that allows machines to be dynamically assigned IP addresses.
+      remediation: |-
+        Run this command to stop and disable `dhcpd` :
+
+        ```
+        systemctl stop dhcpd
+        systemctl disable dhcpd
+        ```
+  - uid: joern-linux-security-permissions-on-etcgroup-are-configured
+    title: Ensure secure permissions on /etc/group are set
+    impact: 100
+    mql: |
+      file("/etc/group") {
+        permissions.user_executable == false
+        permissions.group_writeable == false
+        permissions.group_executable == false
+        permissions.other_writeable == false
+        permissions.other_executable == false
+      }
+    docs:
+      desc: The `/etc/group` file contains a list of all the valid groups defined in the system. This file should have read/write access for root and read access for all other users to prevent non-administrative users from modifying groups.
+      remediation: |-
+        Run this command to set permissions on `/etc/group` :
+
+        ```
+        chown root:root /etc/group
+
+        chmod 644 /etc/group
+        ```

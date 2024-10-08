@@ -1,0 +1,28 @@
+policies:
+  - uid: joern-aws-instance-type
+    name: joern-aws-instance-type
+    version: "1.0.0"
+    scoring_system: highest impact
+    authors:
+      - name: Joern
+        email: jstenkamp@mailbox.org
+    docs:
+      desc: |-
+        Check that AWS instance match the allowed instance type of t2.medium
+    groups:
+      - title: group1
+        checks:
+          - uid: aws-instance-01
+            title: Ensure type is t2-medium
+            mql: terraform.plan.resourceChanges.where(change.actions.contains("create") && type == "aws_instance") { change.after['instance_type'] == "t2.medium" }
+            impact: 30
+
+        queries:
+          - uid: aws-instance-1
+            title: Gather AWS instance types
+            mql: terraform.plan.resourceChanges.where(change.actions.contains("create") && type == "aws_instance")
+
+
+
+
+
